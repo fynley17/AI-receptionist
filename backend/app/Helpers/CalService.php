@@ -21,6 +21,19 @@ class CalService
         $ch = curl_init($url);
         $json = json_encode($payload);
 
+        // Collect response headers
+        $responseHeaders = [];
+        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header) use (&$responseHeaders) {
+            $len = strlen($header);
+            $header = trim($header);
+            if ($header === '') return $len;
+            $parts = explode(':', $header, 2);
+            if (count($parts) === 2) {
+                $responseHeaders[trim($parts[0])] = trim($parts[1]);
+            }
+            return $len;
+        });
+
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
@@ -29,17 +42,47 @@ class CalService
             'Authorization: Bearer ' . $this->apiKey,
         ]);
 
+        // capture verbose output (useful if you enable it locally)
+        $verboseStream = fopen('php://temp', 'w+');
+        curl_setopt($ch, CURLOPT_VERBOSE, true);
+        curl_setopt($ch, CURLOPT_STDERR, $verboseStream);
+
         $body = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $err = curl_error($ch);
+        $curlErrNo = curl_errno($ch);
+        $curlErr = curl_error($ch);
+        rewind($verboseStream);
+        $verboseLog = stream_get_contents($verboseStream);
+        fclose($verboseStream);
+
         curl_close($ch);
 
-        if ($err) {
-            return ['http_code' => 0, 'body' => $err];
+        $decoded = null;
+        if (is_string($body)) {
+            $decoded = json_decode($body, true);
         }
 
-        $decoded = json_decode($body, true);
-        return ['http_code' => $httpCode, 'body' => $decoded ?? $body];
+        return [
+            'http_code' => $httpCode,
+            'request' => [
+                'url' => $url,
+                'body' => $payload,
+                'json' => $json,
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'Authorization' => 'Bearer [REDACTED]'
+                ]
+            ],
+            'response' => [
+                'headers' => $responseHeaders,
+                'body' => $decoded ?? $body
+            ],
+            'curl' => [
+                'errno' => $curlErrNo,
+                'error' => $curlErr,
+                'verbose' => $verboseLog
+            ]
+        ];
     }
 }
 
