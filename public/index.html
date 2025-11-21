@@ -27,12 +27,12 @@
       </header>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2 space-y-6">
+        <div class="lg:col-span-1 space-y-6">
           <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
             <h2 class="text-lg font-semibold mb-4 text-indigo-700">
               ➕ Add New Client Configuration
             </h2>
-            <form @submit.prevent="addClient" class="grid grid-cols-2 gap-4">
+            <form @submit.prevent="addClient" class="grid grid-cols-1 gap-4">
               <input
                 v-model="newClient.name"
                 placeholder="Client Name (e.g., Jane's Dentistry)"
@@ -42,28 +42,22 @@
               <input
                 v-model="newClient.retell_agent_id"
                 placeholder="Retell Agent ID (e.g., oBe3...)"
-                class="p-2 border border-gray-300 rounded"
+                class="col-span-2 p-2 border border-gray-300 rounded"
                 required
               />
               <input
                 v-model="newClient.cal_api_key"
                 placeholder="Cal.com API Key"
-                class="p-2 border border-gray-300 rounded"
+                class="col-span-2 p-2 border border-gray-300 rounded"
                 required
               />
               <input
                 v-model="newClient.cal_event_type_id"
                 type="number"
                 placeholder="Cal Event Type ID (e.g., 12345)"
-                class="p-2 border border-gray-300 rounded"
+                class="col-span-2 p-2 border border-gray-300 rounded"
                 required
               />
-              <input
-                v-model="newClient.from_number"
-                placeholder="Outbound Phone Number (e.g., +15551234)"
-                class="p-2 border border-gray-300 rounded"
-              />
-
               <button
                 type="submit"
                 class="col-span-2 p-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 font-medium transition duration-150"
@@ -91,20 +85,11 @@
                   <span class="font-mono">{{ client.retell_agent_id }}</span>
                 </div>
                 <div class="text-xs text-gray-500">
-                  Event ID: {{ client.cal_event_type_id }} | From #: {{
-                  client.from_number || 'N/A' }}
+                  Event ID: {{ client.cal_event_type_id }}
                 </div>
               </div>
 
               <div class="flex space-x-2 flex-shrink-0">
-                <button
-                  v-if="client.from_number"
-                  @click="startCall(client)"
-                  class="p-2 text-sm bg-green-500 text-white rounded hover:bg-green-600 transition duration-150"
-                  title="Start Outbound Call (Requires phone number input)"
-                >
-                  📞 Call
-                </button>
                 <button
                   @click="startEdit(client)"
                   class="p-2 text-sm text-blue-600 hover:text-blue-800 border rounded"
@@ -124,7 +109,7 @@
           </div>
         </div>
 
-        <div class="lg:col-span-1">
+        <div class="lg:col-span-2">
           <div
             class="bg-white p-6 rounded-xl shadow-md border border-gray-200 h-full"
           >
@@ -203,11 +188,6 @@
               placeholder="Cal Event Type ID (e.g., 12345)"
               class="w-full p-2 border rounded"
               required
-            />
-            <input
-              v-model="currentEditClient.from_number"
-              placeholder="Outbound Phone Number (e.g., +15551234)"
-              class="w-full p-2 border rounded"
             />
 
             <div class="flex justify-end space-x-3 pt-4">
@@ -288,10 +268,9 @@
               retell_agent_id: "",
               cal_api_key: "",
               cal_event_type_id: null,
-              from_number: "", // For outbound calls
+              from_number: "",
             },
             currentEditClient: null,
-            // NEW: Data model for outbound calls
             callClientData: {
               showModal: false,
               fromNumber: "",
@@ -336,12 +315,12 @@
             }
           },
 
-          // CRUD: START EDIT (SETUP)
+          // CRUD: START EDIT (SETUP) - Shows the modal
           startEdit(client) {
             this.currentEditClient = { ...client };
           },
 
-          // CRUD: CANCEL EDIT
+          // CRUD: CANCEL EDIT - Hides the modal without saving
           cancelEdit() {
             this.currentEditClient = null;
           },
@@ -386,7 +365,7 @@
           startCall(client) {
             this.callClientData.fromNumber = client.from_number;
             this.callClientData.agentId = client.retell_agent_id;
-            this.callClientData.toNumber = ""; // Clear previous prospect number
+            this.callClientData.toNumber = "";
             this.callClientData.showModal = true;
           },
 

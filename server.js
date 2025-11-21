@@ -163,6 +163,48 @@ app.post('/api/clients', (req, res) => {
     res.json({ success: true, client: newClient });
 });
 
+// server.js (Add these two routes)
+
+// ---------------------------------------------------------
+// 🔄 UPDATE: Clients (PUT /api/clients/:id)
+// ---------------------------------------------------------
+app.put('/api/clients/:id', (req, res) => {
+    // Ensure the ID parameter is parsed as an integer
+    const clientId = parseInt(req.params.id);
+    const db = loadDatabase();
+    // Find the index of the client to update
+    const index = db.clients.findIndex(c => c.id === clientId);
+
+    if (index !== -1) {
+        // Merge existing data with new data from the body
+        // Ensure ID remains constant (parsed from URL param)
+        db.clients[index] = { ...db.clients[index], ...req.body, id: clientId }; 
+        saveDatabase(db);
+        res.json({ success: true, client: db.clients[index] });
+    } else {
+        res.status(404).json({ success: false, message: 'Client not found' });
+    }
+});
+
+// ---------------------------------------------------------
+// 🗑️ DELETE: Clients (DELETE /api/clients/:id)
+// ---------------------------------------------------------
+app.delete('/api/clients/:id', (req, res) => {
+    const clientId = parseInt(req.params.id);
+    const db = loadDatabase();
+    const initialLength = db.clients.length;
+    
+    // Filter out the client with the matching ID
+    db.clients = db.clients.filter(c => c.id !== clientId);
+    
+    if (db.clients.length < initialLength) {
+        saveDatabase(db);
+        res.json({ success: true, message: 'Client deleted successfully' });
+    } else {
+        res.status(404).json({ success: false, message: 'Client not found' });
+    }
+});
+
 app.get('/api/logs', (req, res) => {
     const db = loadDatabase();
     res.json(db.logs);
