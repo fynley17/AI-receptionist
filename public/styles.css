@@ -1,8 +1,0 @@
-/* /public/styles.css */
-
-.container {
-  max-width: 1200px;
-}
-.log-entry:nth-child(even) {
-  background-color: #f9f9f9;
-}
